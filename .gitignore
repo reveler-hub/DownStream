@@ -1,0 +1,25 @@
+# Virtual environment (see README's Setup section)
+DownStream_Venv/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+
+# Lint cache
+.ruff_cache/
+
+# Runtime state (created next to wherever the server actually runs)
+downstream-channels.json
+DownStream-GUI-error.log
+DownStream-server-error.log
+
+# Downloaded media (in case a job's output directory lands inside the repo)
+*.mp4
+*.mkv
+*.webm
+*.part
+
+# Anything cookie-related -- never belongs in the repo
+*cookies*.txt
+*Cookies*.txt

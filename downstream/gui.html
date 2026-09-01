@@ -1,0 +1,1310 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DownStream</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f5f5f7;
+    --panel: #ffffff;
+    --sidebar: #ffffff;
+    --border: #d8d8dc;
+    --text: #1c1c1e;
+    --muted: #6b6b70;
+    --accent: #6441a5;
+    --accent-text: #ffffff;
+    --error: #c0392b;
+    --ok: #2e7d32;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1e;
+      --panel: #2a2a2d;
+      --sidebar: #232326;
+      --border: #3d3d40;
+      --text: #f0f0f2;
+      --muted: #a0a0a6;
+      --accent: #8a63d2;
+      --accent-text: #ffffff;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  .app { display: flex; height: 100vh; overflow: hidden; }
+
+  /* sidebar */
+  .sidebar {
+    width: 232px;
+    flex-shrink: 0;
+    background: var(--sidebar);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 1.1rem 0.9rem;
+    overflow-y: auto;
+  }
+  .brand { display: flex; align-items: center; gap: 0.5rem; padding: 0 0.4rem; margin-bottom: 1.4rem; }
+  .brand-mark {
+    width: 26px; height: 26px; border-radius: 7px; background: var(--accent);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .brand-mark svg { width: 15px; height: 15px; }
+  .brand-name { font-weight: 700; font-size: 1.05rem; letter-spacing: -0.01em; }
+
+  .nav-section-label {
+    font-size: 0.68rem; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 0.05em; padding: 0.3rem 0.5rem; margin-top: 0.5rem;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 0.65rem; width: 100%;
+    border: none; background: none; text-align: left; font-family: inherit;
+    padding: 0.5rem 0.55rem;
+    border-radius: 7px;
+    font-size: 0.87rem;
+    color: var(--text);
+    margin-bottom: 0.15rem;
+    cursor: pointer;
+  }
+  .nav-item svg { width: 16px; height: 16px; stroke: var(--muted); flex-shrink: 0; }
+  .nav-item.active { background: var(--accent); color: var(--accent-text); }
+  .nav-item.active svg { stroke: var(--accent-text); }
+  .nav-badge {
+    margin-left: auto;
+    background: var(--border);
+    color: var(--muted);
+    font-size: 0.7rem;
+    padding: 0.05rem 0.45rem;
+    border-radius: 999px;
+  }
+  .nav-item.active .nav-badge { background: rgba(255,255,255,0.25); color: var(--accent-text); }
+
+  .sidebar-foot { margin-top: auto; padding-top: 0.9rem; border-top: 1px solid var(--border); }
+  .conn-toggle { display: flex; gap: 0.3rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.2rem; margin-bottom: 0.6rem; }
+  .conn-option { flex: 1; text-align: center; font-size: 0.76rem; padding: 0.35rem 0; border-radius: 6px; color: var(--muted); cursor: pointer; }
+  .conn-option.active { background: var(--panel); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,0.08); font-weight: 600; }
+
+  /* main */
+  .main { flex: 1 1 auto; overflow-y: auto; padding: 1.5rem 2rem 3rem; }
+  .view { display: none; }
+  .view.active { display: block; }
+  .main-head { margin-bottom: 1.1rem; }
+  .main-head h1 { margin: 0; font-size: 1.25rem; }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1rem;
+    max-width: 640px;
+  }
+  .panel h2 {
+    margin: 0 0 0.75rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin: 0.6rem 0 0.25rem;
+  }
+  label:first-of-type { margin-top: 0; }
+  input[type=text], input[type=number], input[type=password], select {
+    width: 100%;
+    padding: 0.5rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.9rem;
+  }
+  .row { display: flex; gap: 0.75rem; }
+  .row > * { flex: 1; }
+  .radio-row { display: flex; gap: 1.2rem; margin: 0.6rem 0; }
+  .radio-row label { display: flex; align-items: center; gap: 0.35rem; margin: 0; color: var(--text); font-size: 0.9rem; }
+  .radio-row input { width: auto; }
+  button {
+    border: none;
+    border-radius: 6px;
+    padding: 0.55rem 1.1rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  button.primary { background: var(--accent); color: var(--accent-text); }
+  button.secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  button.danger { background: transparent; border: 1px solid var(--error); color: var(--error); }
+  button.job-dismiss {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    padding: 0 0.2rem;
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+  button.job-dismiss:hover { color: var(--text); }
+  button:disabled { opacity: 0.5; cursor: default; }
+  .actions { margin-top: 1rem; display: flex; gap: 0.6rem; align-items: center; }
+  .hint { font-size: 0.8rem; color: var(--muted); margin-top: 0.3rem; }
+
+  .job-columns { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5rem; }
+  .job-column-head {
+    margin: 0 0 0.8rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+  /* Each site's own brand color, not the app's --accent -- these are
+     third-party identifiers, so they stay fixed across light/dark rather
+     than following the theme. */
+  .job-column-head.site-twitch { color: #9146ff; }
+  .job-column-head.site-youtube { color: #ff0000; }
+  .job-column-head.site-kick { color: #53fc18; }
+  .job-column-head.site-instagram { color: #E4405F; }
+  .job {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.7rem 0.9rem;
+    margin-bottom: 0.6rem;
+    font-size: 0.85rem;
+    background: var(--panel);
+  }
+  .job-top { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+  .job-top strong { text-transform: capitalize; }
+  .job-url { word-break: break-all; color: var(--muted); }
+  .status-running, .status-live, .status-downloading { color: var(--accent); }
+  .status-done { color: var(--ok); }
+  .status-error, .status-cancelled { color: var(--error); }
+  .status-offline, .status-checking { color: var(--muted); }
+  .channel-row { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+  .channel-toggle { display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; color: var(--muted); white-space: nowrap; }
+  .progress-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border);
+    margin-top: 0.5rem;
+    overflow: hidden;
+  }
+  .progress-bar > div {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+  .progress-text { margin-top: 0.35rem; color: var(--muted); }
+  .result-path { margin-top: 0.4rem; font-family: monospace; font-size: 0.8rem; word-break: break-all; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M6 11l6 6 6-6"/><path d="M5 21h14"/></svg>
+      </div>
+      <div class="brand-name">DownStream</div>
+    </div>
+
+    <div class="nav-section-label">Downloads</div>
+    <button class="nav-item active" id="nav-newjob" onclick="selectView('newjob')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+      New job
+    </button>
+    <button class="nav-item" id="nav-jobs" onclick="selectView('jobs')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16"/><path d="M7 19v-6"/><path d="M12 19v-10"/><path d="M17 19v-14"/></svg>
+      Jobs
+      <span class="nav-badge" id="badge-jobs" style="display:none"></span>
+    </button>
+
+    <div class="sidebar-foot">
+      <div class="nav-section-label" style="padding-left:0.1rem;">Target</div>
+      <div class="conn-toggle">
+        <div class="conn-option active" id="tab-local" onclick="selectMode('local')">This Computer</div>
+        <div class="conn-option" id="tab-remote" onclick="selectMode('remote')">Remote</div>
+      </div>
+      <div id="local-connection">
+        <p class="hint">Talking to this DownStream instance directly &mdash; nothing to configure.</p>
+      </div>
+      <div id="remote-connection" style="display:none">
+        <label for="remote-host">Host / IP</label>
+        <input type="text" id="remote-host" placeholder="e.g. 192.168.1.50" oninput="onRemoteFieldChange()">
+        <label for="remote-port">Port</label>
+        <input type="number" id="remote-port" placeholder="8420" oninput="onRemoteFieldChange()">
+        <label for="remote-token">Token</label>
+        <input type="password" id="remote-token" placeholder="printed when the remote's --remote started" oninput="onRemoteFieldChange()">
+        <div class="actions" style="margin-top:0.6rem;">
+          <button class="primary" onclick="connectRemote()" id="connect-btn" style="width:100%;">Connect</button>
+        </div>
+        <p class="hint" id="remote-connection-status"></p>
+        <p class="hint">Saved in this browser only. The remote machine must be reachable on your network.</p>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <div class="view active" id="view-newjob">
+      <div class="main-head"><h1 id="heading-newjob">New job</h1></div>
+      <div class="panel">
+        <label for="url">Video URL</label>
+        <input type="text" id="url" placeholder="https://www.twitch.tv/..." oninput="scheduleProbe()">
+        <p class="hint" id="probe-status" style="display:none"></p>
+
+        <div id="quality-wrap">
+          <label for="opt-quality">Quality</label>
+          <input type="text" id="opt-quality" placeholder="best">
+        </div>
+
+        <div id="chapter-wrap" style="display:none"></div>
+
+        <div class="row">
+          <div>
+            <label for="opt-output">Output directory</label>
+            <div style="display:flex; gap:0.4rem;">
+              <input type="text" id="opt-output" placeholder="." onchange="saveOutputDir()" style="flex:1;">
+              <button class="secondary" type="button" onclick="browseOutputDir()" id="browse-output-btn">Browse&hellip;</button>
+            </div>
+            <p class="hint" id="output-dir-hint">Remembered in this browser for next time. Blank saves next to wherever this DownStream instance is running.</p>
+          </div>
+          <div>
+            <label for="opt-fragments">Concurrent fragments</label>
+            <input type="number" id="opt-fragments" min="1" value="6">
+          </div>
+        </div>
+
+        <label>Cookies</label>
+        <div id="cookies-section"></div>
+
+        <div id="autowatch-wrap">
+          <label><input type="checkbox" id="opt-autowatch" onchange="onAutoWatchChange()"> Auto Watch</label>
+          <p class="hint">This only works for channel links. Instead of downloading once, DownStream
+            checks it periodically and starts a download automatically the moment it's live &mdash;
+            no need to come back and click anything. Auto-watched channels show up on the Jobs page.
+            Does not work on Instagram.</p>
+        </div>
+
+        <div class="actions">
+          <button class="primary" onclick="submitJob()" id="submit-btn">Download</button>
+          <span class="hint" id="submit-hint"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="view" id="view-jobs">
+      <div class="main-head"><h1 id="heading-jobs">Jobs</h1></div>
+      <div class="job-columns">
+        <div class="job-column">
+          <h2 class="job-column-head site-twitch">Twitch</h2>
+          <div id="watch-twitch"></div>
+          <div id="jobs-twitch"></div>
+          <p id="jobs-twitch-empty" class="hint">Nothing here yet.</p>
+        </div>
+        <div class="job-column">
+          <h2 class="job-column-head site-youtube">YouTube</h2>
+          <div id="watch-youtube"></div>
+          <div id="jobs-youtube"></div>
+          <p id="jobs-youtube-empty" class="hint">Nothing here yet.</p>
+        </div>
+        <div class="job-column">
+          <h2 class="job-column-head site-kick">Kick</h2>
+          <div id="watch-kick"></div>
+          <div id="jobs-kick"></div>
+          <p id="jobs-kick-empty" class="hint">Nothing here yet.</p>
+        </div>
+        <div class="job-column">
+          <h2 class="job-column-head site-instagram">Instagram</h2>
+          <div id="watch-instagram"></div>
+          <div id="jobs-instagram"></div>
+          <p id="jobs-instagram-empty" class="hint">Nothing here yet.</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ============================================================
+// Shared state
+// ============================================================
+const LOCAL_TOKEN = "__LOCAL_TOKEN__";
+const LOCAL_ORIGIN = window.location.origin;
+
+let mode = "local";
+const jobs = [];      // { id, action, url, base, token, status, progress, result, error, timer }
+const jobsById = {};
+
+// Job cards a user has dismissed from view. Kept in localStorage (not just
+// in-memory) so a dismissed card doesn't reappear the next time
+// loadExistingJobs() re-adopts the server's full history -- otherwise
+// "clear" would only last until the next page load.
+const dismissedJobIds = new Set(JSON.parse(localStorage.getItem("downstream_dismissed_jobs") || "[]"));
+
+// ============================================================
+// Navigation & connection target (This Computer / Remote)
+// ============================================================
+function selectView(v) {
+  document.querySelectorAll(".view").forEach(el => el.classList.toggle("active", el.id === "view-" + v));
+  document.querySelectorAll(".nav-item").forEach(el => el.classList.toggle("active", el.id === "nav-" + v));
+  localStorage.setItem("downstream_view", v);
+}
+
+function selectMode(m) {
+  mode = m;
+  document.getElementById("tab-local").classList.toggle("active", m === "local");
+  document.getElementById("tab-remote").classList.toggle("active", m === "remote");
+  document.getElementById("local-connection").style.display = m === "local" ? "" : "none";
+  document.getElementById("remote-connection").style.display = m === "remote" ? "" : "none";
+  refreshChannels();
+  scheduleProbe(); // the pasted URL may now resolve differently against a different target
+  refreshDetectedBrowsers(); // ...and so may which machine's browser cookies are even reachable
+  renderJobs(); // instant target-scoped re-filter; loadExistingJobs() below will fill in anything not loaded yet
+  loadExistingJobs(); // ...and so may what's already running there
+  updateMainHeadings();
+}
+
+// Remote has no persistent connection in the HTTP sense (every request is
+// just a bearer-token call) -- this is a UI-level "have I successfully
+// talked to this host/port/token combo" flag, set only by an explicit
+// Connect click, so there's always a clear yes/no answer visible instead of
+// requests just silently succeeding or failing in the background. Editing
+// any connection field invalidates it -- the old answer no longer means
+// anything once what's being asked about has changed.
+let remoteConnected = false;
+let remoteConnectedLabel = ""; // exactly what the user typed into Host/IP, e.g. "dietpi" or "192.168.68.6"
+
+function onRemoteFieldChange() {
+  if (remoteConnected) {
+    remoteConnected = false;
+    remoteConnectedLabel = "";
+    updateMainHeadings();
+  }
+  document.getElementById("remote-connection-status").textContent = "";
+}
+
+async function connectRemote() {
+  const statusEl = document.getElementById("remote-connection-status");
+  const host = document.getElementById("remote-host").value.trim();
+  if (!host) {
+    statusEl.textContent = "Enter a host/IP first.";
+    statusEl.className = "hint";
+    return;
+  }
+  const { base, token } = currentTarget();
+  if (!token) {
+    statusEl.textContent = "Enter the token first.";
+    statusEl.className = "hint";
+    return;
+  }
+
+  const btn = document.getElementById("connect-btn");
+  btn.disabled = true;
+  statusEl.textContent = "Connecting...";
+  statusEl.className = "hint";
+  try {
+    await apiFetch(base, token, "/channels"); // any cheap authenticated endpoint -- proves host+port+token all actually work
+    remoteConnected = true;
+    remoteConnectedLabel = host;
+    statusEl.textContent = `Connected to ${host}.`;
+    statusEl.className = "hint status-done";
+    refreshChannels();
+    scheduleProbe();
+    refreshDetectedBrowsers();
+    loadExistingJobs();
+  } catch (e) {
+    remoteConnected = false;
+    remoteConnectedLabel = "";
+    statusEl.textContent = "Could not connect: " + e.message;
+    statusEl.className = "hint status-error";
+  } finally {
+    btn.disabled = false;
+    updateMainHeadings();
+  }
+}
+
+const HEADING_BASE = { newjob: "New job", jobs: "Jobs" };
+
+function updateMainHeadings() {
+  const suffix = mode === "remote" && remoteConnected && remoteConnectedLabel ? ` - ${remoteConnectedLabel}` : "";
+  for (const key in HEADING_BASE) {
+    const el = document.getElementById("heading-" + key);
+    if (el) el.textContent = HEADING_BASE[key] + suffix;
+  }
+}
+
+// True once it's actually safe to talk to whatever `mode` currently points
+// at: always for "This Computer", only after a successful Connect for
+// "Remote" -- the single check every remote-touching action below shares.
+function targetReady() {
+  return mode === "local" || remoteConnected;
+}
+
+// ============================================================
+// Automatic cookie detection
+// ============================================================
+// No mode picker, no browser picker -- cookies are just automatically
+// pulled from whichever browser on the current target (this computer, or
+// whatever machine "Remote" points at) looks most recently used, on the
+// theory that's the one you're actually logged into. detectedSources is
+// null until the /browsers lookup resolves, [] once resolved with nothing
+// found. Uploading a cookies file (still available on both forms) overrides
+// this outright -- see collectOptions(), shared by both a one-shot
+// download and an Auto Watch registration (submitJob()).
+let detectedSources = null;
+
+async function refreshDetectedBrowsers() {
+  detectedSources = null;
+  renderCookiesSection("", "opt-cookies");
+  if (!targetReady()) return; // nothing to check until Remote is actually connected
+  try {
+    const { base, token } = currentTarget();
+    const data = await apiFetch(base, token, "/browsers");
+    detectedSources = data.detected || [];
+  } catch (e) {
+    detectedSources = [];
+  }
+  renderCookiesSection("", "opt-cookies");
+}
+
+// The wiki's own "Getting a cookies file locally" section -- exporting a
+// cookies.txt with a browser extension, then using "Upload a cookies
+// file" below.
+const COOKIE_HELP_URL = "https://github.com/reveler-hub/DownStream/wiki/Cookies-From-Browser#getting-a-cookies-file-locally";
+
+// The file upload only ever appears as the edge-case fallback -- once a
+// browser is auto-detected there's nothing for it to override, so it stays
+// out of the way instead of sitting there as a second, redundant control.
+function renderCookiesSection(prefix, fileInputId) {
+  const container = document.getElementById(prefix + "cookies-section");
+  if (!container) return;
+  if (!targetReady()) {
+    container.innerHTML = '<p class="hint">Connect to the remote instance first.</p>';
+    return;
+  }
+
+  // New Job's probe already tries cookie candidates for real against
+  // whatever's actually typed there (see runProbe) -- once it's settled
+  // for the current URL, show that verified outcome instead of the
+  // generic pre-verification guess, since the two can genuinely disagree.
+  if (prefix === "" && currentProbe.status === "ready" && currentProbe.url === document.getElementById("url").value.trim()) {
+    if (currentProbe.cookiesUsed) {
+      const label = (detectedSources || []).find(s => s.value === currentProbe.cookiesUsed);
+      container.innerHTML = `<p class="hint">Using cookies from ${label ? label.label : "a detected browser"} — verified against this link.</p>`;
+    } else {
+      container.innerHTML = '<p class="hint">This link didn\'t need cookies.</p>';
+    }
+    return;
+  }
+
+  if (detectedSources === null) {
+    container.innerHTML = '<p class="hint">Checking for browser cookies...</p>';
+  } else if (detectedSources.length === 0) {
+    container.innerHTML = `
+      <p class="hint">Browser cookies not found — <a href="${COOKIE_HELP_URL}" target="_blank" rel="noopener">read how to get around this</a>.</p>
+      <label for="${fileInputId}">Upload a cookies file</label>
+      <input type="file" id="${fileInputId}" accept=".txt">`;
+  } else {
+    container.innerHTML = `<p class="hint">Automatically using cookies from ${detectedSources[0].label}.</p>`;
+  }
+}
+
+// The most-recently-used detected browser's value (already the exact
+// string -b/--cookies-from-browser expects), or null if none was found.
+// Only ever a starting guess -- New Job prefers the probe-verified choice
+// on currentProbe.cookiesUsed once one exists for the current URL (see
+// collectOptions). Still what Watched Channels uses directly, since it has
+// no per-URL probe to verify against.
+function autoDetectedCookiesBrowser() {
+  return detectedSources && detectedSources.length ? detectedSources[0].value : null;
+}
+
+// ============================================================
+// URL probing (quality/chapter auto-detect on paste)
+// ============================================================
+function formatDuration(seconds) {
+  if (seconds == null) return null;
+  seconds = Math.round(seconds);
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  const pad = n => String(n).padStart(2, "0");
+  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
+}
+
+// Best-first, with any "Audio Only" entry pushed to the end regardless of
+// where the site's own format order happened to put it.
+function orderedQualities(qualities) {
+  const audio = qualities.filter(q => /audio/i.test(q));
+  const video = qualities.filter(q => !/audio/i.test(q)).reverse();
+  return video.concat(audio);
+}
+
+let probeTimer = null;
+let probeSeq = 0; // lets a stale in-flight probe notice it's been superseded
+let currentProbe = { url: null, status: "idle", result: null, error: null, cookiesUsed: undefined };
+
+function scheduleProbe() {
+  clearTimeout(probeTimer);
+  const url = document.getElementById("url").value.trim();
+  if (!url) {
+    probeSeq++;
+    currentProbe = { url: null, status: "idle", result: null, error: null, cookiesUsed: undefined };
+    renderProbe();
+    return;
+  }
+  probeTimer = setTimeout(() => runProbe(url), 600);
+}
+
+// One info-job creation + poll-to-completion for a single cookies choice.
+// Returns {status: "done"|"error", result, error} once settled, or
+// {superseded: true} if a newer probe took over while this was in flight.
+async function probeOnce(url, base, token, cookiesFromBrowser, seq) {
+  const options = {};
+  if (cookiesFromBrowser) options.cookies_from_browser = cookiesFromBrowser;
+  const created = await apiFetch(base, token, "/jobs", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url, action: "info", options }),
+  });
+  while (true) {
+    if (seq !== probeSeq) return { superseded: true };
+    const data = await apiFetch(base, token, "/jobs/" + created.job_id);
+    if (data.status === "running") {
+      await new Promise(r => setTimeout(r, 500));
+      continue;
+    }
+    return { status: data.status, result: data.result, error: data.error };
+  }
+}
+
+async function runProbe(url) {
+  const seq = ++probeSeq;
+  currentProbe = { url, status: "checking", result: null, error: null, cookiesUsed: undefined };
+  renderProbe();
+
+  const { base, token } = currentTarget();
+  if (mode === "remote" && (!base.includes("://") || !token)) {
+    currentProbe = { url, status: "error", result: null, error: "Fill in the remote host, port, and token first.", cookiesUsed: undefined };
+    renderProbe();
+    return;
+  }
+  if (!targetReady()) {
+    currentProbe = { url, status: "error", result: null, error: "Connect to the remote instance first.", cookiesUsed: undefined };
+    renderProbe();
+    return;
+  }
+
+  // Try anonymously first (works for most links), then fall back through
+  // detected browsers in ranked order if that fails. The "most recently
+  // used" browser being *some* browser with cookies doesn't guarantee it's
+  // actually logged into *this* site -- confirmed directly: a browser
+  // auto-picked by recency had no real YouTube session at all, and would
+  // have failed outright without this fallback. Whichever candidate
+  // actually works gets remembered on currentProbe.cookiesUsed and reused
+  // for the real download, instead of re-guessing from scratch.
+  const candidates = [null, ...(detectedSources || []).map(s => s.value)];
+  let lastError = "Could not fetch info";
+  for (const cookiesFromBrowser of candidates) {
+    let outcome;
+    try {
+      outcome = await probeOnce(url, base, token, cookiesFromBrowser, seq);
+    } catch (e) {
+      lastError = e.message;
+      continue;
+    }
+    if (outcome.superseded) return;
+    if (outcome.status === "done") {
+      currentProbe = { url, status: "ready", result: outcome.result, error: null, cookiesUsed: cookiesFromBrowser };
+      renderProbe();
+      return;
+    }
+    lastError = outcome.error || lastError;
+  }
+  if (seq !== probeSeq) return;
+  currentProbe = { url, status: "error", result: null, error: lastError, cookiesUsed: undefined };
+  renderProbe();
+}
+
+function onChapterChoiceChange() {
+  const pick = document.querySelector('input[name=chapter-choice]:checked').value === "pick";
+  document.getElementById("opt-chapter").style.display = pick ? "" : "none";
+}
+
+function renderProbe() {
+  const statusEl = document.getElementById("probe-status");
+  const qualityWrap = document.getElementById("quality-wrap");
+  const chapterWrap = document.getElementById("chapter-wrap");
+  const plainQualityInput = '<label for="opt-quality">Quality</label><input type="text" id="opt-quality" placeholder="best">';
+
+  // Instagram has no "channel" concept the way Twitch/YouTube/Kick do --
+  // there's no continuous live stream to watch for, just posts/reels/
+  // stories that exist or don't -- so Auto Watch is hidden outright rather
+  // than offered and silently doing nothing (see server.py's _check_channel:
+  // Instagram's VideoInfo has no is_live field at all, so a watched
+  // Instagram link always reads as "offline" and never triggers anything).
+  const autowatchWrap = document.getElementById("autowatch-wrap");
+  const isInstagram = jobSiteKey((document.getElementById("url").value || "").trim()) === "instagram";
+  autowatchWrap.style.display = isInstagram ? "none" : "";
+  if (isInstagram && document.getElementById("opt-autowatch").checked) {
+    document.getElementById("opt-autowatch").checked = false;
+    onAutoWatchChange(); // keep the submit button's "Watch"/"Download" label in sync
+  }
+
+  if (currentProbe.status === "idle") {
+    statusEl.style.display = "none";
+    statusEl.textContent = "";
+    qualityWrap.innerHTML = plainQualityInput;
+    chapterWrap.style.display = "none";
+    chapterWrap.innerHTML = "";
+    renderCookiesSection("", "opt-cookies");
+    return;
+  }
+
+  statusEl.style.display = "";
+
+  if (currentProbe.status === "checking") {
+    statusEl.textContent = "Checking link...";
+    renderCookiesSection("", "opt-cookies"); // still shows the pre-verification guess while this candidate-tries
+    return; // leave any already-shown quality/chapter controls in place while rechecking
+  }
+
+  if (currentProbe.status === "error") {
+    statusEl.textContent = "Could not check this link (" + currentProbe.error + ") — you can still submit with a manual quality.";
+    qualityWrap.innerHTML = plainQualityInput;
+    chapterWrap.style.display = "none";
+    chapterWrap.innerHTML = "";
+    renderCookiesSection("", "opt-cookies");
+    return;
+  }
+
+  const r = currentProbe.result;
+  const bits = [r.title || currentProbe.url];
+  if (r.is_live) {
+    bits.push("live now");
+  } else if (r.duration_seconds) {
+    bits.push(formatDuration(r.duration_seconds));
+  }
+  if (r.view_count != null) bits.push(`${r.view_count.toLocaleString()} views`);
+  statusEl.textContent = bits.join(" — ");
+
+  const qualities = r.qualities || [];
+  if (qualities.length) {
+    const options = ['<option value="best">Best available</option>']
+      .concat(orderedQualities(qualities).map(q => `<option value="${q}">${q}</option>`));
+    qualityWrap.innerHTML = `<label for="opt-quality">Quality</label><select id="opt-quality">${options.join("")}</select>`;
+  } else {
+    qualityWrap.innerHTML = plainQualityInput;
+  }
+
+  const chapters = r.chapters || [];
+  if (chapters.length > 1) {
+    chapterWrap.style.display = "";
+    // Chapter titles come from the VOD's own uploader -- third-party text,
+    // same reasoning as the job title/path escaping elsewhere on this page.
+    const chapterOptions = chapters
+      .map((c, i) => `<option value="${i + 1}">${i + 1}. ${escapeHtml(c.title || "Chapter " + (i + 1))} (${formatDuration(c.start)}–${formatDuration(c.end)})</option>`)
+      .join("");
+    chapterWrap.innerHTML = `
+      <div class="radio-row">
+        <label><input type="radio" name="chapter-choice" value="whole" checked onchange="onChapterChoiceChange()"> Whole VOD</label>
+        <label><input type="radio" name="chapter-choice" value="pick" onchange="onChapterChoiceChange()"> Choose a chapter</label>
+      </div>
+      <select id="opt-chapter" style="display:none">${chapterOptions}</select>`;
+  } else {
+    chapterWrap.style.display = "none";
+    chapterWrap.innerHTML = "";
+  }
+
+  renderCookiesSection("", "opt-cookies");
+}
+
+// ============================================================
+// Remote settings & API helpers
+// ============================================================
+function loadRemoteSettings() {
+  document.getElementById("remote-host").value = localStorage.getItem("downstream_remote_host") || "";
+  document.getElementById("remote-port").value = localStorage.getItem("downstream_remote_port") || "";
+  document.getElementById("remote-token").value = localStorage.getItem("downstream_remote_token") || "";
+}
+function saveRemoteSettings() {
+  localStorage.setItem("downstream_remote_host", document.getElementById("remote-host").value.trim());
+  localStorage.setItem("downstream_remote_port", document.getElementById("remote-port").value.trim());
+  localStorage.setItem("downstream_remote_token", document.getElementById("remote-token").value.trim());
+}
+
+function currentTarget() {
+  if (mode === "local") {
+    return { base: LOCAL_ORIGIN, token: LOCAL_TOKEN };
+  }
+  saveRemoteSettings();
+  const host = document.getElementById("remote-host").value.trim();
+  const port = document.getElementById("remote-port").value.trim() || "8420";
+  const token = document.getElementById("remote-token").value.trim();
+  return { base: `http://${host}:${port}`, token };
+}
+
+// Same target resolution as currentTarget(), minus its saveRemoteSettings()
+// side effect -- renderJobs() calls this on every render (as often as once
+// a second while a job is running), which would otherwise hammer
+// localStorage with the remote fields on every single poll tick.
+function activeBase() {
+  if (mode === "local") return LOCAL_ORIGIN;
+  const host = document.getElementById("remote-host").value.trim();
+  const port = document.getElementById("remote-port").value.trim() || "8420";
+  return `http://${host}:${port}`;
+}
+
+async function apiFetch(base, token, path, opts) {
+  opts = opts || {};
+  opts.headers = Object.assign({ "Authorization": "Bearer " + token }, opts.headers || {});
+  const resp = await fetch(base + path, opts);
+  const data = await resp.json().catch(() => ({}));
+  if (!resp.ok) {
+    throw new Error(data.error || `HTTP ${resp.status}`);
+  }
+  return data;
+}
+
+// ============================================================
+// Output directory: remembered across sessions (this browser only), and
+// pickable via a native folder dialog on whichever machine is actually
+// running the server -- see server.py's /pick-folder. Nothing here changes
+// what gets sent with a job: an empty field still means "let the server
+// use its own default," exactly as before.
+// ============================================================
+function loadOutputDir() {
+  const saved = localStorage.getItem("downstream_output_dir");
+  if (saved) document.getElementById("opt-output").value = saved;
+}
+
+function saveOutputDir() {
+  const value = document.getElementById("opt-output").value.trim();
+  if (value) {
+    localStorage.setItem("downstream_output_dir", value);
+  } else {
+    localStorage.removeItem("downstream_output_dir");
+  }
+}
+
+async function browseOutputDir() {
+  const hint = document.getElementById("output-dir-hint");
+  const btn = document.getElementById("browse-output-btn");
+  const { base, token } = currentTarget();
+  if (mode === "remote" && (!base.includes("://") || !token)) {
+    hint.textContent = "Fill in the remote host, port, and token first.";
+    return;
+  }
+  if (!targetReady()) {
+    hint.textContent = "Connect to the remote instance first.";
+    return;
+  }
+
+  btn.disabled = true;
+  const originalHint = hint.textContent;
+  hint.textContent = mode === "remote"
+    ? "Opening a folder picker on the remote machine…"
+    : "Opening a folder picker…";
+  try {
+    const data = await apiFetch(base, token, "/pick-folder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ initial_dir: document.getElementById("opt-output").value.trim() || null }),
+    });
+    if (data.path) {
+      document.getElementById("opt-output").value = data.path;
+      saveOutputDir();
+      hint.textContent = originalHint;
+    } else {
+      hint.textContent = "No folder chosen.";
+    }
+  } catch (e) {
+    hint.textContent = e.message; // server's own message already explains the fallback (type the path)
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ============================================================
+// New job submission
+// ============================================================
+async function collectOptions() {
+  const opts = {};
+  const quality = document.getElementById("opt-quality").value.trim();
+  const output = document.getElementById("opt-output").value.trim();
+  const fragments = document.getElementById("opt-fragments").value.trim();
+  if (quality) opts.quality = quality;
+
+  const chapterEl = document.getElementById("opt-chapter");
+  const chapterChoice = document.querySelector('input[name=chapter-choice]:checked');
+  if (chapterEl && chapterChoice && chapterChoice.value === "pick") {
+    opts.chapter = parseInt(chapterEl.value, 10);
+  }
+
+  if (output) opts.output_dir = output;
+  if (fragments) opts.concurrent_fragments = parseInt(fragments, 10);
+
+  const cookiesFileEl = document.getElementById("opt-cookies"); // only present when no browser was auto-detected
+  const cookiesFile = cookiesFileEl ? cookiesFileEl.files[0] : null;
+  if (cookiesFile) {
+    // Uploaded as raw content, not a server-side path -- the job API
+    // materializes it into a real file on whichever machine runs the job.
+    // An explicit upload always wins over the automatic browser pick.
+    opts.cookies_content = await cookiesFile.text();
+  } else {
+    const url = document.getElementById("url").value.trim();
+    if (currentProbe.status === "ready" && currentProbe.url === url) {
+      // The probe already tried this exact URL for real -- use whichever
+      // cookies (if any) it actually confirmed work, instead of re-guessing
+      // from the generic recency-based pick, which can be wrong (confirmed:
+      // it picked a browser with no real session for the target site).
+      if (currentProbe.cookiesUsed) opts.cookies_from_browser = currentProbe.cookiesUsed;
+    } else {
+      const autoBrowser = autoDetectedCookiesBrowser();
+      if (autoBrowser) opts.cookies_from_browser = autoBrowser;
+    }
+  }
+  return opts;
+}
+
+// Flips the submit button's label to match what it's actually about to do
+// -- "Watch" is a meaningfully different action from "Download" (registers
+// a standing watch instead of fetching once), and the button shouldn't
+// still say "Download" while that's checked.
+function onAutoWatchChange() {
+  const checked = document.getElementById("opt-autowatch").checked;
+  document.getElementById("submit-btn").textContent = checked ? "Watch" : "Download";
+}
+
+async function submitJob() {
+  const url = document.getElementById("url").value.trim();
+  const hint = document.getElementById("submit-hint");
+  hint.textContent = "";
+  if (!url) {
+    hint.textContent = "Enter a URL first.";
+    return;
+  }
+  const { base, token } = currentTarget();
+  if (mode === "remote" && (!base.includes("://") || !token)) {
+    hint.textContent = "Fill in the remote host, port, and token first.";
+    return;
+  }
+  if (!targetReady()) {
+    hint.textContent = "Connect to the remote instance first.";
+    return;
+  }
+
+  const autoWatch = document.getElementById("opt-autowatch").checked;
+  const btn = document.getElementById("submit-btn");
+  btn.disabled = true;
+  try {
+    const options = await collectOptions();
+    if (autoWatch) {
+      // Same /channels path the old dedicated "Watched channels" form used
+      // -- a channel-watch, not a one-shot job, so it doesn't call addJob().
+      // It shows up on the Jobs page once the watch loop actually triggers
+      // a real download (see renderChannels()/renderWatchCard() below for
+      // the "currently watching" state in the meantime).
+      await apiFetch(base, token, "/channels", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url, auto_download: true, options }),
+      });
+      hint.textContent = "Watching. Check the Jobs page for status.";
+      refreshChannels();
+    } else {
+      const data = await apiFetch(base, token, "/jobs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url, action: "download", options }),
+      });
+      addJob({ id: data.job_id, action: "download", url, base, token, status: "running", progress: {}, elapsed: 0 });
+    }
+  } catch (e) {
+    hint.textContent = "Error: " + e.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ============================================================
+// Jobs: state, polling, cancel
+// ============================================================
+function addJob(job) {
+  jobs.unshift(job);
+  jobsById[job.id] = job;
+  renderJobs();
+  pollJob(job.id);
+}
+
+// A page reload empties this tab's own `jobs` array, but never touches the
+// server -- a running download was never tied to the page staying open, so
+// without this it just silently keeps going with nothing tracking it (a
+// real gap, hit directly: had to find and kill orphaned ffmpeg processes by
+// hand after a reload lost their job IDs). Re-adopts the server's full job
+// history, not just still-running ones -- a done/cancelled/errored job
+// disappearing on refresh (while staying visible for the rest of the
+// session it finished in) was its own confusing inconsistency. The
+// tradeoff is a long-lived server's full history reloads every time; worth
+// it for "the page always shows what's really there" over a surprise
+// vanishing act.
+async function loadExistingJobs() {
+  if (!targetReady()) {
+    renderJobs(); // re-render so the target-scoped filter clears out the previous target's cards
+    return;
+  }
+  const { base, token } = currentTarget();
+  try {
+    const data = await apiFetch(base, token, "/jobs");
+    for (const j of data.jobs || []) {
+      // Server returns creation order (oldest first); unshift each in turn
+      // so the final order is newest-first, matching addJob()'s convention
+      // for jobs submitted live in this session.
+      if (jobsById[j.id] || dismissedJobIds.has(j.id)) continue;
+      const job = { id: j.id, action: j.action, url: j.url, base, token, status: j.status, progress: j.progress || {}, result: j.result, error: j.error, elapsed: j.elapsed };
+      jobs.unshift(job);
+      jobsById[job.id] = job;
+      if (job.status === "running") pollJob(job.id);
+    }
+    renderJobs();
+  } catch (e) {
+    // silent -- same treatment as refreshChannels on an unreachable target
+  }
+}
+
+async function pollJob(id) {
+  const job = jobsById[id];
+  if (!job) return;
+  try {
+    const data = await apiFetch(job.base, job.token, "/jobs/" + id);
+    job.status = data.status;
+    job.progress = data.progress || {};
+    job.result = data.result;
+    job.error = data.error;
+    job.elapsed = data.elapsed;
+  } catch (e) {
+    job.status = "error";
+    job.error = e.message;
+  }
+  renderJobs();
+  if (job.status === "running") {
+    setTimeout(() => pollJob(id), 1000);
+  }
+}
+
+async function cancelJob(id) {
+  const job = jobsById[id];
+  if (!job) return;
+  try {
+    await apiFetch(job.base, job.token, "/jobs/" + id + "/cancel", { method: "POST" });
+  } catch (e) {
+    // next poll will surface the real state either way
+  }
+}
+
+// Dismissal is a client-side "hide this card" -- it never touches the
+// server's job history, only which ids this browser has chosen not to show.
+function dismissJob(id) {
+  dismissedJobIds.add(id);
+  localStorage.setItem("downstream_dismissed_jobs", JSON.stringify([...dismissedJobIds]));
+  const idx = jobs.findIndex(j => j.id === id);
+  if (idx !== -1) jobs.splice(idx, 1);
+  delete jobsById[id];
+  renderJobs();
+}
+
+// Live channel captures (Twitch/Kick) have no known total -- ffmpeg is
+// downloading the stream on its own, outside yt-dlp's own progress
+// reporting, so there's nothing to divide against for a percentage (see
+// _watch_progress in each site's download.py). A growing byte count
+// still says something real is happening, instead of a static
+// "Downloading..." that looks identical whether 1MB or 1GB has landed.
+function formatBytes(bytes) {
+  if (!bytes) return "0 B";
+  const units = ["B", "KB", "MB", "GB"];
+  let i = 0;
+  while (bytes >= 1024 && i < units.length - 1) {
+    bytes /= 1024;
+    i++;
+  }
+  return `${bytes.toFixed(1)} ${units[i]}`;
+}
+
+// Server-computed (Job.to_json()'s "elapsed"), not tracked client-side --
+// survives a page reload without resetting, since it's derived from the
+// job's real creation time on the server rather than "whenever this
+// browser tab first noticed the job."
+function formatElapsed(seconds) {
+  if (seconds == null) return "";
+  const total = Math.floor(seconds);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  const mm = h > 0 ? String(m).padStart(2, "0") : String(m);
+  const ss = String(s).padStart(2, "0");
+  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+}
+
+function progressLabel(job) {
+  const p = job.progress || {};
+  let label;
+  if (p.status === "fetching_segments") {
+    label = `Fetching segments: ${p.downloaded || 0}/${p.total || "?"}`;
+  } else if (p.status === "encoding") {
+    label = "Encoding...";
+  } else if (p.status === "downloading" && p.total_bytes) {
+    const pct = Math.round((p.downloaded_bytes / p.total_bytes) * 100);
+    label = `Downloading: ${pct}%`;
+  } else if (p.status === "downloading") {
+    label = `Downloading... ${formatBytes(p.downloaded_bytes)}`;
+  } else if (job.elapsed != null && job.elapsed > 20) {
+    // A YouTube --live-from-start capture walks the recording back to the
+    // stream's actual beginning before any real fragment data exists to
+    // report -- confirmed directly against a real 24/7 stream sitting at
+    // zero bytes on disk for 200+ seconds while genuinely still working,
+    // not stuck. Past ~20s with nothing yet, a bare "Starting..." reads as
+    // broken; say what's actually happening instead. Rare for Twitch/Kick,
+    // which normally show real progress within a couple of seconds.
+    label = "Preparing capture... (a continuous live stream's walk-back to its actual start can take several minutes)";
+  } else {
+    label = "Starting...";
+  }
+  const clock = formatElapsed(job.elapsed);
+  return clock ? `${label} · ${clock}` : label;
+}
+
+function progressPercent(job) {
+  const p = job.progress || {};
+  if (p.status === "fetching_segments" && p.total) return Math.round((p.downloaded / p.total) * 100);
+  if (p.status === "downloading" && p.total_bytes) return Math.round((p.downloaded_bytes / p.total_bytes) * 100);
+  if (p.status === "encoding") return 100;
+  return 0;
+}
+
+// ============================================================
+// Jobs: rendering (four-column Twitch/YouTube/Kick/Instagram view)
+// ============================================================
+// Grouping is purely a display concern -- keyed off the job's own URL
+// rather than anything the server tags it with, since the three columns are
+// just "which site does this link belong to", the same question `find_site`
+// answers server-side.
+function jobSiteKey(url) {
+  let host;
+  try {
+    host = new URL(url).hostname.replace(/^www\./, "");
+  } catch (e) {
+    return null;
+  }
+  if (host.endsWith("twitch.tv")) return "twitch";
+  if (host.endsWith("youtube.com") || host === "youtu.be") return "youtube";
+  if (host.endsWith("kick.com")) return "kick";
+  if (host.endsWith("instagram.com")) return "instagram";
+  return null;
+}
+
+// A video/stream's title is chosen by whoever's link this is -- not by
+// the DownStream user themselves, unlike the URL -- so unlike everything
+// else this card template interpolates, it can't go into innerHTML raw.
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function renderJobCard(job) {
+  const statusClass = "status-" + job.status;
+  // The title only becomes known once the site module's first progress
+  // update reports it (see download_video() in each Downloaders/<site>/
+  // download.py) -- shows the URL until then, same as it always has.
+  const title = job.progress && job.progress.title;
+  const displayName = title ? escapeHtml(title) : job.url;
+  let body = "";
+  if (job.status === "running") {
+    body = `<div class="progress-bar"><div style="width:${progressPercent(job)}%"></div></div>
+            <div class="progress-text">${progressLabel(job)}</div>`;
+  } else if (job.status === "done") {
+    // The saved path's filename is built from the video's own title (see
+    // DEFAULT_OUTPUT_TEMPLATE in each Downloaders/<site>/download.py) --
+    // third-party text, same as the title above, so it gets the same
+    // escaping rather than going into innerHTML raw.
+    //
+    // Every site but Instagram's DownloadResult has one `path`; Instagram's
+    // has `paths` (plural) instead -- a story-tray link can save several
+    // files in one job (see Downloaders/instagram/download.py), so there's
+    // no single path to report.
+    const r = job.result || {};
+    const paths = r.paths || (r.path ? [r.path] : []);
+    body = paths.length
+      ? paths.map(p => `<div class="result-path">Saved to: ${escapeHtml(p)}</div>`).join("")
+      : `<div class="result-path">Saved to: (unknown path)</div>`;
+  } else if (job.status === "cancelled") {
+    // A cancelled live download can still have salvaged a real, playable
+    // file (see server.py's _run_job) -- show it the same way a "done"
+    // job does, right alongside the fact that it was cancelled.
+    const savedPath = job.result && job.result.path;
+    body = `<div class="progress-text">Cancelled.</div>` +
+      (savedPath ? `<div class="result-path">Saved to: ${escapeHtml(savedPath)}</div>` : "");
+  } else if (job.status === "error") {
+    // job.error can echo back text from the failed page (a yt-dlp
+    // extractor error sometimes includes it) -- third-party-influenced,
+    // same treatment as the title/path above.
+    body = `<div class="progress-text">${job.error ? escapeHtml(job.error) : "Unknown error"}</div>`;
+  }
+  const actionBtn = job.status === "running"
+    ? `<button class="danger" onclick="cancelJob('${job.id}')">Cancel</button>`
+    : `<button class="job-dismiss" title="Clear" onclick="dismissJob('${job.id}')">&times;</button>`;
+  return `<div class="job">
+    <div class="job-top">
+      <strong class="${statusClass}">${job.action} &mdash; ${job.status}</strong>
+      ${actionBtn}
+    </div>
+    <div class="job-url">${displayName}</div>
+    ${body}
+  </div>`;
+}
+
+const JOB_SITE_COLUMNS = ["twitch", "youtube", "kick", "instagram"];
+
+function renderJobs() {
+  // Jobs carry their own `base` from whichever target they were created or
+  // loaded against (see addJob()/loadExistingJobs()) -- scope the display
+  // to whichever target is currently selected, the same way refreshChannels()
+  // already scopes Watched channels, instead of mixing This Computer's and
+  // Remote's jobs into the same columns with nothing to tell them apart.
+  // Jobs from the other target keep polling in the background (see
+  // pollJob) and reappear the moment that target is reselected.
+  const base = activeBase();
+  for (const site of JOB_SITE_COLUMNS) {
+    const siteJobs = jobs.filter(j => jobSiteKey(j.url) === site && j.base === base);
+    document.getElementById(`jobs-${site}`).innerHTML = siteJobs.map(renderJobCard).join("");
+    updateColumnEmptyState(site);
+  }
+
+  const running = jobs.filter(j => j.status === "running" && j.base === base).length;
+  const jobsBadge = document.getElementById("badge-jobs");
+  jobsBadge.textContent = running;
+  jobsBadge.style.display = running ? "" : "none";
+}
+
+// ============================================================
+// Watched channels
+// ============================================================
+// Watched channels are no longer a separate page -- adding one happens via
+// New Job's "Auto Watch" checkbox (see submitJob()) instead. What's left
+// here is purely about *showing* current watches: polled the same way
+// jobs are, but rendered into the Jobs page's per-site columns (above the
+// real job cards -- see renderWatchCard()/updateColumnEmptyState() below)
+// since a watch isn't a job until the moment it actually triggers one.
+async function refreshChannels() {
+  if (!targetReady()) {
+    renderChannels([]);
+    return;
+  }
+  const { base, token } = currentTarget();
+  try {
+    const data = await apiFetch(base, token, "/channels");
+    renderChannels(data.channels || []);
+  } catch (e) {
+    // silent -- avoid spamming errors on every poll tick if unreachable
+  }
+}
+
+async function toggleChannelAuto(id, checked) {
+  const { base, token } = currentTarget();
+  try {
+    await apiFetch(base, token, "/channels/" + id, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ auto_download: checked }),
+    });
+  } catch (e) {
+    // ignore -- the next refresh shows the real state either way
+  } finally {
+    refreshChannels();
+  }
+}
+
+async function removeChannel(id) {
+  const { base, token } = currentTarget();
+  try {
+    await apiFetch(base, token, "/channels/" + id, { method: "DELETE" });
+  } catch (e) {
+    // ignore
+  } finally {
+    refreshChannels();
+  }
+}
+
+function renderWatchCard(ch) {
+  const statusClass = "status-" + ch.status;
+  // last_error can echo back page text from a failed lookup, same
+  // third-party-content reasoning as a job's title/path/error -- escaped
+  // before going into innerHTML.
+  const detail = ch.status === "error" && ch.last_error ? `<div class="progress-text">${escapeHtml(ch.last_error)}</div>` : "";
+  return `<div class="job">
+    <div class="job-top">
+      <strong class="${statusClass}">watching &mdash; ${ch.status}</strong>
+      <div class="channel-row">
+        <label class="channel-toggle">
+          <input type="checkbox" ${ch.auto_download ? "checked" : ""} onchange="toggleChannelAuto('${ch.id}', this.checked)">
+          Auto
+        </label>
+        <button class="danger" onclick="removeChannel('${ch.id}')">Stop</button>
+      </div>
+    </div>
+    <div class="job-url">${ch.url}</div>
+    ${detail}
+  </div>`;
+}
+
+// A site column's "empty" message only makes sense once neither its watch
+// list nor its job list has anything in it -- called after either one
+// re-renders, since they update independently (jobs push/poll live,
+// channels poll every 5s).
+function updateColumnEmptyState(site) {
+  const hasWatch = document.getElementById(`watch-${site}`).children.length > 0;
+  const hasJobs = document.getElementById(`jobs-${site}`).children.length > 0;
+  document.getElementById(`jobs-${site}-empty`).style.display = (hasWatch || hasJobs) ? "none" : "";
+}
+
+function renderChannels(list) {
+  for (const site of JOB_SITE_COLUMNS) {
+    const siteChannels = list.filter(ch => jobSiteKey(ch.url) === site);
+    document.getElementById(`watch-${site}`).innerHTML = siteChannels.map(renderWatchCard).join("");
+    updateColumnEmptyState(site);
+  }
+}
+
+// ============================================================
+// Startup
+// ============================================================
+setInterval(refreshChannels, 5000);
+
+loadRemoteSettings();
+loadOutputDir();
+// "channels" was a real view before Watched channels merged into New Job's
+// Auto Watch checkbox -- a browser that saved it before this change would
+// otherwise land on a view that no longer exists (nothing shown at all).
+const savedView = localStorage.getItem("downstream_view");
+selectView(savedView === "newjob" || savedView === "jobs" ? savedView : "newjob");
+renderProbe();
+refreshDetectedBrowsers();
+refreshChannels();
+loadExistingJobs();
+updateMainHeadings();
+</script>
+</body>
+</html>

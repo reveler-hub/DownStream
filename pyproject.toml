@@ -1,0 +1,24 @@
+[project]
+name = "downstream"
+version = "1.0.0"
+description = "Multi-site video downloader (Twitch, YouTube, Kick, Instagram), built on yt-dlp."
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = [
+    "yt-dlp>=2026.7.4",
+    "yt-dlp-ejs",
+    "curl_cffi",
+]
+
+[project.scripts]
+downstream = "downstream.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["downstream", "Downloaders", "Downloaders.twitch", "Downloaders.youtube", "Downloaders.kick", "Downloaders.instagram"]
+
+[tool.setuptools.package-data]
+downstream = ["gui.html"]

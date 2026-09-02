@@ -6,7 +6,7 @@
 
 A multi-site video downloader with a browser GUI, for Twitch, YouTube,
 Kick, and Instagram (posts/reels/IGTV and stories — video only, not
-photos). Paste a link, pick a quality and a folder, download — or watch a
+photos, see [Related](#related)). Paste a link, pick a quality and a folder, download — or watch a
 Twitch/YouTube/Kick channel and have it auto-download the moment it goes
 live (Instagram has no channel/live concept, so Auto Watch doesn't apply
 there). Built on
@@ -93,3 +93,9 @@ page for the full HTTP+JSON API.
 
 See **[Architecture](https://github.com/reveler-hub/DownStream/wiki/Architecture)**
 on the wiki for the module-by-module breakdown.
+
+## Related
+
+Instagram support here is video only (see above). For stories, highlights,
+carousels, and photos, see **[StoryPull](https://github.com/reveler-hub/storypull)**,
+a single-file CLI downloader built on `yt-dlp` for exactly what it drops.

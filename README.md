@@ -98,4 +98,4 @@ on the wiki for the module-by-module breakdown.
 
 Instagram support here is video only (see above). For stories, highlights,
 carousels, and photos, see **[StoryPull](https://github.com/reveler-hub/storypull)**,
-a single-file CLI downloader built on `yt-dlp` for exactly what it drops.
+a single-file CLI downloader.

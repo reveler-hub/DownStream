@@ -94,6 +94,12 @@ page for the full HTTP+JSON API.
 See **[Architecture](https://github.com/reveler-hub/DownStream/wiki/Architecture)**
 on the wiki for the module-by-module breakdown.
 
+## Troubleshooting
+
+Job failing? See **[Troubleshooting](https://github.com/reveler-hub/DownStream/wiki/Troubleshooting)**
+on the wiki — cookie/login-wall errors, and missing `deno`/`ffmpeg`/
+`curl_cffi`.
+
 ## Related
 
 Instagram support here is video only (see above). For stories, highlights,

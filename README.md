@@ -16,7 +16,8 @@ elsewhere) — if all you want is a bare command-line downloader, `yt-dlp`
 itself already does that.
 
 <img width="1920" height="1034" alt="New_job" src="https://github.com/user-attachments/assets/9dd2d90f-be02-493d-b6f5-5c6fdd31ee3f" />
-<img width="1920" height="1034" alt="New_Jobs" src="https://github.com/user-attachments/assets/e87b841b-3fa9-4e73-bac8-80d2580e57c7" />
+<img width="1919" height="936" alt="DownStream-GUI" src="https://github.com/user-attachments/assets/733b7a7f-fd63-4bce-b3a9-20d45c91f8b2" />
+
 
 
 
